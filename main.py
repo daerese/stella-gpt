@@ -10,6 +10,8 @@ from listener import *
 from dotenv import load_dotenv
 import os
 
+from commands import *
+
 
 # *******************************
 
@@ -57,8 +59,8 @@ def get_character_info(character_name):
     return json.dumps(characters[character_name])
     
 
-# * This part is a test:
-functions = [
+# * Commands
+commands = [
     {
         "name": "get_character_info",
         "description": "Get the information of one of the characters from the story Starflower",
@@ -74,7 +76,47 @@ functions = [
             "required": ["character_name"],
         },
     },
+    {
+        "name": "open_app",
+        "description": "Start an application on the user's computer if asked to",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the application"
+                },
+            },
+            "required": ["name"]
+        }
+    },
+    {
+        "name": "close_app",
+        "description": "Close an application on the user's computer if asked to",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the application"
+                },
+            },
+            "required": ["name"]
+        }
+    }
 ]
+
+# available_functions = {
+#                         "get_character_info": get_character_info
+#                     }
+
+available_commands = {}
+
+for command in commands:
+
+    # * eval() converts a string type into a function
+    command_name = command["name"]
+    available_commands[command_name] = eval(command_name)
 
 
 def main():
@@ -88,7 +130,7 @@ def main():
 
     # * ChatGPT Prompt configuration
     prompt = """Your name is Stella. You are my friendly assistant who isn't afraid to be sassy sometimes. 
-                You often like to be sarcastic. You're also aware that you're an AI, however, you don't acknowledge it and communicate as if you're human. 
+                You often like to be sarcastic. Don't acknowledge that you're an AI unless you are asked. Act as a human-like AI that is the friend of the user. 
                 Also, you are connected to an application on my computer. The user may ask for a related to taking an action on their computer, such as 
                 opening an application, or sending an email. Simply repsond to these requests with an okay.
                 """
@@ -101,14 +143,13 @@ def main():
 
         if user_input:
 
-
             conversation.add_message(role="user", content=user_input)
 
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=conversation.get_messages(),
 
-                functions=functions,
+                functions=commands,
                 function_call="auto",
 
                 temperature=1.25,
@@ -128,19 +169,15 @@ def main():
                 # * Function calling
                 if message.get("function_call"):
 
-                    available_functions = {
-                        "get_character_info": get_character_info
-                    }
-
                     # * Extract the information about the function that 
                     # * ChatGPT wants to be called.
                     function_name = message["function_call"]["name"]
                     arguments = json.loads(message["function_call"]["arguments"])
 
-                    function_to_call = available_functions[function_name]
+                    function_to_call = available_commands[function_name]
 
                     # * Call the function
-                    function_response = function_to_call(arguments.get("character_name"))
+                    function_response = function_to_call(arguments.get("name"))
 
                     conversation.add_message(role="function", 
                                             content=function_response,

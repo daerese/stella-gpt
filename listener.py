@@ -28,11 +28,11 @@ def listen():
         text = recognizer.recognize_google(audio).lower()
         print("You said:", text)
         return text
-    except sr.UnknownValueError:
+    except sr.UnknownValueError as e:
         print("Sorry, I didn't catch that.")
         speak("Sorry, I didn't catch that.")
-        return None
-    except sr.RequestError:
+        return e
+    except sr.RequestError as e:
         print("Sorry, there was an issue connecting to the speech recognition service.")
         speak("Sorry, there was an issue connecting to the speech recognition service.")
-        return None   
+        return e  
