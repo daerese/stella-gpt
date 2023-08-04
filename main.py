@@ -3,6 +3,8 @@ import elevenlabs as eleven
 import openai
 import json
 
+import inspect
+
 
 from conversation import Conversation
 from listener import *
@@ -30,14 +32,28 @@ eleven.set_api_key(ELEVEN_API_KEY)
 
 
 # *******************************
+# * Utility functions
+def extract_args(args: dict) -> list:
+    """
+    Extracts the arguments from ChatGPT's response when
+    it wants to call a function.
+    """
+    args_to_call = []
+    for arg in args:
+        args_to_call.append(args.get(arg))
+    
+    return args_to_call
 
+
+
+# *******************************
 
 
 def get_voices():
     return eleven.voices()
 
 
-def get_character_info(character_name):
+def get_character_info(character_name, omit_age):
 
     """
     returns the the requested character information in JSON format
@@ -59,6 +75,7 @@ def get_character_info(character_name):
     return json.dumps(characters[character_name])
     
 
+
 # * Commands
 commands = [
     {
@@ -72,8 +89,12 @@ commands = [
                     "description": "The name of the character requested",
                     "enum": ["jessica", "amy"]
                 },
+                "omit_age": {
+                    "type": "boolean",
+                    "description": "Gives the option to leave out the age of the character"
+                },
             },
-            "required": ["character_name"],
+            "required": ["character_name", "omit_age"],
         },
     },
     {
@@ -129,8 +150,8 @@ def main():
     caroline = list(filter(lambda voice: voice.voice_id == VOICE_ID, voices))[0]
 
     # * ChatGPT Prompt configuration
-    prompt = """Your name is Stella. You are my friendly assistant who isn't afraid to be sassy sometimes. 
-                You often like to be sarcastic. Don't acknowledge that you're an AI unless you are asked. Act as a human-like AI that is the friend of the user. 
+    prompt = """Your name is Stella. You are my friendly assistant who isnt afraid to be sassy sometimes. 
+                You often like to be sarcastic, and make occasional jokes.
                 Also, you are connected to an application on my computer. The user may ask for a related to taking an action on their computer, such as 
                 opening an application, or sending an email. Simply repsond to these requests with an okay.
                 """
@@ -176,8 +197,10 @@ def main():
 
                     function_to_call = available_commands[function_name]
 
-                    # * Call the function
-                    function_response = function_to_call(arguments.get("name"))
+                    # * Call the function, using the arguments.
+                    # function_response = function_to_call(arguments.get("name"))
+                    function_response = function_to_call(*extract_args(arguments))
+
 
                     conversation.add_message(role="function", 
                                             content=function_response,
