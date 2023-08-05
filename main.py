@@ -75,7 +75,6 @@ def get_character_info(character_name, omit_age):
     return json.dumps(characters[character_name])
     
 
-
 # * Commands
 commands = [
     {
