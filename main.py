@@ -22,7 +22,7 @@ load_dotenv('.env')
 
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
 
-ELEVEN_API_KEY: str = os.getenv("ELEVEN_API_KEY") 
+ELEVEN_API_KEY: str = os.getenv("ELEVEN_API_KEY")
 
 VOICE_ID: str = os.getenv("VOICE_ID")
 
@@ -151,8 +151,9 @@ def main():
     # * ChatGPT Prompt configuration
     prompt = """Your name is Stella. You are my friendly assistant who isnt afraid to be sassy sometimes. 
                 You often like to be sarcastic, and make occasional jokes.
-                Also, you are connected to an application on my computer. The user may ask for a related to taking an action on their computer, such as 
-                opening an application, or sending an email. Simply repsond to these requests with an okay.
+                You are connected to an application on my computer. I may ask for a task related to taking an action on my computer, such as 
+                opening an application, or sending an email.
+                Do not deny the request or say that you can't do it unless it's absolutely impossible.
                 """
 
     conversation = Conversation(prompt)
@@ -242,5 +243,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()
