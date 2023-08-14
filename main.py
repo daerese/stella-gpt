@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 import os
 
 from commands import *
-
+from spotify_player import Spotify_Player
 
 # *******************************
 
@@ -25,6 +25,9 @@ OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
 ELEVEN_API_KEY: str = os.getenv("ELEVEN_API_KEY")
 
 VOICE_ID: str = os.getenv("VOICE_ID")
+
+# * Spotify Environment variables
+
 
 # * API Keys
 openai.api_key = OPENAI_API_KEY
@@ -98,7 +101,8 @@ commands = [
     },
     {
         "name": "open_app",
-        "description": "Start an application on the user's computer if asked to",
+        "description": "Start an application on the user's computer if asked to, \
+                        If the application is already opened, inform the user of that.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -112,7 +116,8 @@ commands = [
     },
     {
         "name": "close_app",
-        "description": "Close an application on the user's computer if asked to",
+        "description": "Close an application on the user's computer if asked to. \
+                        If the application is already closed, inform the user of that",
         "parameters": {
             "type": "object",
             "properties": {
@@ -158,7 +163,11 @@ def main():
 
     conversation = Conversation(prompt)
 
-     
+    # * Spotify Initialization
+
+    spotify_player = Spotify_Player()
+
+    
     while True:
         user_input = listen()
 
@@ -179,8 +188,7 @@ def main():
                 frequency_penalty=0,
                 presence_penalty=0
             )
-
-
+            
             try:
 
                 # ************************************
@@ -200,7 +208,6 @@ def main():
                     # * Call the function, using the arguments.
                     # function_response = function_to_call(arguments.get("name"))
                     function_response = function_to_call(*extract_args(arguments))
-
 
                     conversation.add_message(role="function", 
                                             content=function_response,
@@ -239,8 +246,6 @@ def main():
                 print(message["content"])
                 speak(message["content"])
                 # eleven.play(audio, use_ffmpeg=False)
-
-
 
 if __name__ == '__main__':
     main()
