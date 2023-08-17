@@ -15,7 +15,8 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 # * Custom open function
-from commands import open_app, is_open
+# from commands import open_app, is_open
+import commands
 
 
 class Spotify_Player:
@@ -156,7 +157,7 @@ class Spotify_Player:
 
         # * If spotify is installed and not open, open on the computer.
         if self.is_installed:
-            open_app("spotify")
+            commands.open_app("spotify")
 
         # * Otherwise, If not installed, open it on the web browser
 
@@ -193,7 +194,7 @@ class Spotify_Player:
         # * If spotify is not opened, open it and wait for device
         # * Otherwise, just set the device id
 
-        if not is_open("spotify", include_exe=True):
+        if not commands.is_open("spotify", include_exe=True):
             self.open_spotify()
 
             # * If no current device, find and set the current device

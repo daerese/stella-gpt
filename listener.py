@@ -15,19 +15,24 @@ def speak(text):
     engine.stop()
     
 
+
+
+
 def listen():
     recognizer = sr.Recognizer()
-
 
     with sr.Microphone() as source:
         print("Listening...")
         recognizer.adjust_for_ambient_noise(source)
-        audio = recognizer.listen(source)        
+        audio = recognizer.listen(source)
+        # print(audio)
 
     try:
-        text = recognizer.recognize_google(audio).lower()
+        # text = recognizer.recognize_google(audio).lower()
+        text = recognizer.recognize_google(audio)
         print("You said:", text)
         return text
+    
     except sr.UnknownValueError as e:
         print("Sorry, I didn't catch that.")
         speak("Sorry, I didn't catch that.")

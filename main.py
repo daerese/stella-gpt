@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 import os
 
 from commands import *
-from spotify_player import Spotify_Player
+from spotify_player import Spotify_Player   
 
 # *******************************
 
@@ -31,7 +31,7 @@ VOICE_ID: str = os.getenv("VOICE_ID")
 
 # * API Keys
 openai.api_key = OPENAI_API_KEY
-eleven.set_api_key(ELEVEN_API_KEY)
+# eleven.set_api_key(ELEVEN_API_KEY)
 
 
 # *******************************
@@ -53,7 +53,8 @@ def extract_args(args: dict) -> list:
 
 
 def get_voices():
-    return eleven.voices()
+    pass
+    # return eleven.voices()
 
 
 def get_character_info(character_name, omit_age):
@@ -128,6 +129,31 @@ commands = [
             },
             "required": ["name"]
         }
+    },
+    {
+        "name": "use_spotify_player",
+        "description": "Uses an instance of the Spotify_Player class to play music on Spotify.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "play_option": {
+                    "type": "boolean",
+                    "description": "Determines whether the user pause or play something on Spotify\
+                                    If the user wants to pause their music, or resume the current playback, then no other parameter is required\
+                                    True to play, False to pause"
+                },
+                "item": {
+                    "type": "string",
+                    "description": "The track that the user wants to play on Spotify."
+                },
+                "type": {
+                    "type": "string",
+                    "description": "The type of the item that the user wants to play",
+                    "enum": ["track", "album", "playlist"]
+                }
+            },
+            "required": ["play_option"]
+        }
     }
 ]
 
@@ -149,9 +175,9 @@ def main():
     print("Finding microphone...")
 
     # * Getting the Caroline voice
-    voices = get_voices()
+    # voices = get_voices()
 
-    caroline = list(filter(lambda voice: voice.voice_id == VOICE_ID, voices))[0]
+    # caroline = list(filter(lambda voice: voice.voice_id == VOICE_ID, voices))[0]
 
     # * ChatGPT Prompt configuration
     prompt = """Your name is Stella. You are my friendly assistant who isnt afraid to be sassy sometimes. 
@@ -165,7 +191,7 @@ def main():
 
     # * Spotify Initialization
 
-    spotify_player = Spotify_Player()
+    # spotify_object = Spotify_Player()
 
     
     while True:
@@ -205,14 +231,24 @@ def main():
 
                     function_to_call = available_commands[function_name]
 
-                    # * Call the function, using the arguments.
-                    # function_response = function_to_call(arguments.get("name"))
-                    function_response = function_to_call(*extract_args(arguments))
+                    # * Call the function, using the arguments. 
+                    # * Also, determine if the use_spotify_player function is being called
+
+                    if function_name == "use_spotify_player":
+
+                        # * Create a spotify object if it isn't already created.
+                        if "spotify_object" not in locals():
+                            spotify_object = Spotify_Player()
+
+                        function_response = function_to_call(spotify_object, *extract_args(arguments))
+                    else:
+                        function_response = function_to_call(*extract_args(arguments))
 
                     conversation.add_message(role="function", 
                                             content=function_response,
                                             function_name=function_name,
                                             )
+                    
                     # * Generate another response based on the called function
                     second_response = openai.ChatCompletion.create(
                         model="gpt-3.5-turbo",

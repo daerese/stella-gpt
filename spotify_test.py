@@ -16,6 +16,8 @@ import requests
 from dotenv import load_dotenv
 import os
 
+from commands import *
+
 # ************************
 
 """
@@ -102,6 +104,8 @@ def search_for_playlist(token: str, playlist: str) -> json:
 
     return response.json()
 
+
+print("Waiting for authorization...")
 
 # Create spotify object
 spotifyObject = spotipy.Spotify(
@@ -191,9 +195,6 @@ while True:
             devices = spotifyObject.devices()["devices"]
 
             print_json(devices)
-
-
-
 
 
     if choice == 4:
