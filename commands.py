@@ -12,7 +12,13 @@ import traceback
 
 from spotify_player import Spotify_Player
 
-# *
+
+"""
+ChatGPT recieves a response from our functions. The response 
+should be a string. So let's try returning a message from 
+each command that shows either success or failure of the user's request.
+"""
+
 
 
 # ************************************************
@@ -20,6 +26,7 @@ from spotify_player import Spotify_Player
 load_dotenv('.env')
 
 
+# * Utility function
 def is_open(app_name: str, include_exe: bool = False) -> bool:
     """
     Confirms if an application is open or not.
@@ -37,6 +44,9 @@ def is_open(app_name: str, include_exe: bool = False) -> bool:
             break
     
     return opened
+
+# *********************************
+# * Commands
 
 # * Open an app
 def open_app(name: str) -> str:
@@ -117,3 +127,11 @@ def use_spotify_player(spotify_object: type[Spotify_Player], play_option: bool =
     
     else:
         spotify_object.pause()
+    
+    return "success"
+
+
+
+def sleep() -> dict:
+    return {"result": False, 
+            "message": ""}

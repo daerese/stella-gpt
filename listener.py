@@ -9,16 +9,18 @@ def speak(text):
     voices = engine.getProperty('voices')
     engine.setProperty('voice', voices[1].id)
     
+
+    engine.save_to_file(text, 'message.wav')
+
     # * Speak
-    engine.say(text)
+    # engine.say(text)
     engine.runAndWait()
     engine.stop()
-    
 
 
 
 
-def listen():
+def listen(awake=False) -> dict:
     recognizer = sr.Recognizer()
 
     with sr.Microphone() as source:
@@ -29,15 +31,42 @@ def listen():
 
     try:
         # text = recognizer.recognize_google(audio).lower()
-        text = recognizer.recognize_google(audio)
+        text = recognizer.recognize_google(audio).lower()
         print("You said:", text)
-        return text
+        
+        response = {
+            "message": text,
+            "error": False
+        }
+
+        return response
     
     except sr.UnknownValueError as e:
-        print("Sorry, I didn't catch that.")
-        speak("Sorry, I didn't catch that.")
-        return e
+
+        message = "The speech recognition software could not process what the user said \
+                    Inform the user with a short message"
+        # print("Sorry, I didn't catch that.")
+        # speak("Sorry, I didn't catch that.")
+        
+        response = {
+            "message": message,
+            "error": True
+        }
+        
+        return response
+    
+        
     except sr.RequestError as e:
-        print("Sorry, there was an issue connecting to the speech recognition service.")
-        speak("Sorry, there was an issue connecting to the speech recognition service.")
-        return e  
+        message = "There is an issue with the speech recognition service. \
+                    Inform the user with a short message"
+        # print("Sorry, there was an issue connecting to the speech recognition service.")
+        # speak("Sorry, there was an issue connecting to the speech recognition service.")
+
+        response = {
+            "message": message,
+            "error": True
+        }
+
+        return response
+
+

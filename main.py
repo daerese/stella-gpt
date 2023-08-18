@@ -15,6 +15,8 @@ import os
 from commands import *
 from spotify_player import Spotify_Player   
 
+import eel
+
 # *******************************
 
 # * Environment variables
@@ -154,6 +156,16 @@ commands = [
             },
             "required": ["play_option"]
         }
+    },
+    {
+        "name": "sleep",
+        "description": "If the user doesn't need any more assistance at the moment\
+                        This function should be called. You will take no more input from the user until they request\
+                        your assistance again",
+        "parameters": {
+            "type": "object",
+            "properties": {}
+        }
     }
 ]
 
@@ -170,7 +182,8 @@ for command in commands:
     available_commands[command_name] = eval(command_name)
 
 
-def main():
+@eel.expose
+def start():
     
     print("Finding microphone...")
 
@@ -180,101 +193,128 @@ def main():
     # caroline = list(filter(lambda voice: voice.voice_id == VOICE_ID, voices))[0]
 
     # * ChatGPT Prompt configuration
-    prompt = """Your name is Stella. You are my friendly assistant who isnt afraid to be sassy sometimes. 
-                You often like to be sarcastic, and make occasional jokes.
-                You are connected to an application on my computer. I may ask for a task related to taking an action on my computer, such as 
-                opening an application, or sending an email.
+    prompt = """Your name is Stella. You are my friendly assistant. You often like to be sarcastic, and make occasional jokes.
+                You are connected to an application on my computer. I'm using my voice to communicate with you, and turning my speech into text via a speech recognition software.
+                I may ask for a task related to taking an action on my computer, such as opening an application, or sending an email.
                 Do not deny the request or say that you can't do it unless it's absolutely impossible.
+                You also have the ability to play something on Spotify on the user's computer if you are asked.
+                When you receive the awake command from the user: "hey stella", return a short and breif message letting them know 
+                that you're listening
                 """
 
     conversation = Conversation(prompt)
 
-    # * Spotify Initialization
-
-    # spotify_object = Spotify_Player()
 
     
     while True:
-        user_input = listen()
 
-        if user_input:
+        # * 1. Listen for user input
+        # * 2. Wait for the wake word: "Stella" or "Hey Stella"
+        # * 3. After the wake word is heard, the program will
+        # *    listen for inputs to send to ChatGPT
 
-            conversation.add_message(role="user", content=user_input)
+        awake = False
 
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=conversation.get_messages(),
 
-                functions=commands,
-                function_call="auto",
 
-                temperature=1.25,
-                # max_tokens=75,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0
-            )
+        user_input: dict = listen()
+
+        input_message: str = user_input["message"]
+
+        input_error: bool = user_input["error"]
+
+    
+        if not input_error and "hey stella" in input_message:
+
+            awake = True
+
+            print("Awoken")
+
+            while awake:
+
+                role = "user" if not input_error else "system"
+                
+                conversation.add_message(role=role, content=input_message)
+
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=conversation.get_messages(),
+
+                    functions=commands,
+                    function_call="auto",
+
+                    temperature=1.25,
+                    # max_tokens=75,
+                    top_p=1,
+                    frequency_penalty=0,
+                    presence_penalty=0
+                )
             
-            try:
+                
+                try:
 
-                # ************************************
-                # * Append ChatGPT response to have context in the current conversation.
-                message = response["choices"][0]["message"]
-                # print(message)
-                # * Function calling
-                if message.get("function_call"):
+                    # ************************************
+                    # * Append ChatGPT response to have context in the current conversation.
+                    message = response["choices"][0]["message"]
+                    # print(message)
+                    # * Function calling
+                    if message.get("function_call"):
 
-                    # * Extract the information about the function that 
-                    # * ChatGPT wants to be called.
-                    function_name = message["function_call"]["name"]
-                    arguments = json.loads(message["function_call"]["arguments"])
+                        # * Extract the information about the function that 
+                        # * ChatGPT wants to be called.
+                        function_name = message["function_call"]["name"]
+                        arguments = json.loads(message["function_call"]["arguments"])
 
-                    function_to_call = available_commands[function_name]
+                        function_to_call = available_commands[function_name]
 
-                    # * Call the function, using the arguments. 
-                    # * Also, determine if the use_spotify_player function is being called
+                        # * Call the function, using the arguments. 
+                        # * Also, determine if the use_spotify_player function is being called
 
-                    if function_name == "use_spotify_player":
+                        if function_name == "use_spotify_player":
 
-                        # * Create a spotify object if it isn't already created.
-                        if "spotify_object" not in locals():
-                            spotify_object = Spotify_Player()
+                            # * Create a spotify object if it isn't already created.
+                            if "spotify_object" not in locals():
+                                spotify_object = Spotify_Player()
 
-                        function_response = function_to_call(spotify_object, *extract_args(arguments))
-                    else:
-                        function_response = function_to_call(*extract_args(arguments))
+                            function_response = function_to_call(spotify_object, *extract_args(arguments))
+                        
+                        elif function_name == "sleep":
+                            result = function_to_call()
+                            awake = result["result"]
+                            function_response = result["message"]
+                        else:
+                            function_response = function_to_call(*extract_args(arguments))
 
-                    conversation.add_message(role="function", 
-                                            content=function_response,
-                                            function_name=function_name,
-                                            )
-                    
-                    # * Generate another response based on the called function
-                    second_response = openai.ChatCompletion.create(
-                        model="gpt-3.5-turbo",
-                        messages=conversation.get_messages(),
+                        conversation.add_message(role="function", 
+                                                content=function_response,
+                                                function_name=function_name,
+                                                )
+                        
+                        # * Generate another response based on the called function
+                        second_response = openai.ChatCompletion.create(
+                            model="gpt-3.5-turbo",
+                            messages=conversation.get_messages(),
 
-                        temperature=1.25,
-                        max_tokens=75,
-                        top_p=1,
-                        frequency_penalty=0,
-                        presence_penalty=0
-                    )
-                    
-                    message = second_response["choices"][0]["message"]
-                # ************************************
-            except Exception as error:
-                print("There was an error: \n", error)
-            
-            else:
-                conversation.add_message(content=message["content"], role="assistant")
+                            temperature=1.25,
+                            max_tokens=75,
+                            top_p=1,
+                            frequency_penalty=0,
+                            presence_penalty=0
+                        )
+                        
+                        message = second_response["choices"][0]["message"]
+                    # ************************************
+                except Exception as error:
+                    print("There was an error: \n", error)
+                else:
+                    conversation.add_message(content=message["content"], role="assistant")
 
-                # * Generate the voice using a message.
-                # audio = eleven.generate(
-                #     text=message["content"],
-                #     voice=caroline,
-                #     model="eleven_multilingual_v1"
-                # )
+                    # * Generate the voice using a message.
+                    # audio = eleven.generate(
+                    #     text=message["content"],
+                    #     voice=caroline,
+                    #     model="eleven_multilingual_v1"
+                    # )
 
                 print("\nPlaying audio...")
                 
@@ -282,6 +322,24 @@ def main():
                 print(message["content"])
                 speak(message["content"])
                 # eleven.play(audio, use_ffmpeg=False)
+
+                # * Take another input and reset
+                user_input = listen()
+
+                input_message = user_input["message"]
+
+                input_error = user_input["error"]
+
+
+
+        else:
+            print("Try again")
+
+
+def main():
+    eel.init('gui')
+
+    eel.start('main.html')
 
 if __name__ == '__main__':
     main()
