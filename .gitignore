@@ -177,4 +177,7 @@ pyrightconfig.json
 # My python project files
 test.py
 
+# The audio file does not need to be uploaded
+message.wav
+
 # End of https://www.toptal.com/developers/gitignore/api/python
