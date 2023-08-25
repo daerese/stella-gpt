@@ -181,6 +181,16 @@ for command in commands:
     command_name = command["name"]
     available_commands[command_name] = eval(command_name)
 
+# * A test function that will be called from Javascript (script.js)
+@eel.expose
+def py_print(message="the string was not passed :("):
+    # print(message)
+    print(message)
+
+@eel.expose
+def call_from_py():
+    eel.log_on_js()
+
 
 @eel.expose
 def start():
@@ -320,7 +330,11 @@ def start():
                 
 
                 print(message["content"])
-                speak(message["content"])
+                generate_audio(message["content"])
+
+                # * Call the function from JavaScript to play the audio 
+                # * on the frontend.
+                eel.playAudio()
                 # eleven.play(audio, use_ffmpeg=False)
 
                 # * Take another input and reset

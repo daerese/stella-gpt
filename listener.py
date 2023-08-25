@@ -1,7 +1,11 @@
 import speech_recognition as sr
 import pyttsx3
 
-def speak(text):
+def generate_audio(text):
+
+    """
+    Turns the passed text into speech and saves it to an audio file
+    """
 
     engine = pyttsx3.init()
 
@@ -9,15 +13,13 @@ def speak(text):
     voices = engine.getProperty('voices')
     engine.setProperty('voice', voices[1].id)
     
-
-    engine.save_to_file(text, 'message.wav')
+    # * Save the audio file to the frontend audio folder
+    engine.save_to_file(text, 'gui/audio/message.wav')
 
     # * Speak
     # engine.say(text)
     engine.runAndWait()
     engine.stop()
-
-
 
 
 def listen(awake=False) -> dict:

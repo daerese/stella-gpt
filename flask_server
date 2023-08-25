@@ -1,0 +1,24 @@
+from flask import Flask, jsonify, send_file
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
+
+
+app.route("/members")
+def members():
+    return {"members": ["Member1, Member2"]}
+
+
+@app.route("/audio")
+def get_audio():
+
+    file_path = "audio/message.wav"
+
+    return send_file(
+        file_path,
+        mimetype="audio/wav", 
+        as_attachment=True, 
+    )
+
+app.run(debug=True)
