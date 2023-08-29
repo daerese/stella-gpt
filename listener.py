@@ -14,7 +14,7 @@ def generate_audio(text):
     engine.setProperty('voice', voices[1].id)
     
     # * Save the audio file to the frontend audio folder
-    engine.save_to_file(text, 'gui/audio/message.wav')
+    engine.save_to_file(text, 'audio/message.wav')
 
     # * Speak
     # engine.say(text)

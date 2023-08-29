@@ -17,6 +17,8 @@ from spotify_player import Spotify_Player
 
 import eel
 
+from typing import Dict, Any
+
 # *******************************
 
 # * Environment variables
@@ -55,8 +57,8 @@ def extract_args(args: dict) -> list:
 
 
 def get_voices():
-    pass
-    # return eleven.voices()
+    # pass
+    return eleven.voices()
 
 
 def get_character_info(character_name, omit_age):
@@ -192,8 +194,186 @@ def call_from_py():
     eel.log_on_js()
 
 
+# @eel.expose
+# def start():
+
+
+"""
+We may have to separate the actions in the while loop
+in separate functions that are callable. 
+
+
+1. Initialize the conversation with the prompt
+    a. Maybe at the top in the global scope
+    b. Maybe call it at the start using Javascript
+2. Function that recieves the input text from Javascript
+    # a. If currently sleeping, wait for the wake command to be recieved (hey stella)
+    # b. Set awake to true if wake command is found.
+    # c. If awake --> Send message to ChatGPT
+3. function to handle ChatGPT responses
+    a. Handles the ChatGPT call and response
+    b. Generate audio from the ChatGPT response
+
+Javascript side:
+1. Pass the user input to the python function (through eel)
+    a. Await --> wait for python to process the input and 
+                 generate an audio file from ChatGPT's response
+    b. recieve a code of 200 (success) or 500 (error)
+2. After successful audio generation, make HTTP request for the audio
+3. Play the audio and animation
+    a. While the audio is playing, disable microphone until audio is finished
+       then re-enable it
+4. REPEAT
+
+
+"""
+
+# * ChatGPT Prompt configuration
+prompt = """Your name is Stella. You are my friendly assistant. You often like to be sarcastic, and make occasional jokes.
+            You are connected to an application on my computer. I'm using my voice to communicate with you, and turning my speech into text via a speech recognition software.
+            I may ask for a task related to taking an action on my computer, such as opening an application, or sending an email.
+            Do not deny the request or say that you can't do it unless it's absolutely impossible.
+            You also have the ability to play something on Spotify on the user's computer if you are asked.
+            When you receive the awake command from the user: "hey stella", return a short and breif message letting them know 
+            that you're listening
+            """
+
+conversation = Conversation(prompt)
+
+voices = get_voices()
+
+caroline = list(filter(lambda voice: voice.voice_id == VOICE_ID, voices))[0]
+
+
+
 @eel.expose
-def start():
+def generate_gpt_response(text: str) -> Dict[str, Any]:
+
+    """
+    This recieves a text input, and sends it to ChatGPT. A response
+    from ChatGPT is then created, and audio will be generated from that response
+
+    Parameters:
+    - text : str 
+        - The text input to be sent to ChatGPT
+    
+    Returns:
+    - json object: An object with a status code indicating the 
+    success or failure of generating a response.
+    """
+
+    conversation.add_message(role="user", content=text)
+
+    # * A personal status code to indicate to my Javascript 
+    # * whether the 
+    status = {
+        "status": 200,
+        "statusMessage": "",
+        "gptMessage": ""
+    }
+
+    try:
+        # * Send the message to ChatGPT
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=conversation.get_messages(),
+
+            functions=commands,
+            function_call="auto",
+
+            temperature=1.25,
+            # max_tokens=75,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
+    except:
+        status["status"] = 500
+        status["message"] = "ChatGPT response error"
+    else:
+        # * Append ChatGPT response to have context in the current conversation.
+        message = response["choices"][0]["message"]
+        # print(message)
+        # * Function calling
+        if message.get("function_call"):
+
+            # * Extract the information about the function that 
+            # * ChatGPT wants to be called.
+            function_name = message["function_call"]["name"]
+            arguments = json.loads(message["function_call"]["arguments"])
+
+            function_to_call = available_commands[function_name]
+
+            # * Call the function, using the arguments. 
+            # * Also, determine if the use_spotify_player function is being called
+
+            if function_name == "use_spotify_player":
+
+                # * Create a spotify object if it isn't already created.
+                if "spotify_object" not in locals():
+                    spotify_object = Spotify_Player()
+
+                function_response = function_to_call(spotify_object, *extract_args(arguments))
+            
+            elif function_name == "sleep":
+                result = function_to_call()
+                awake = result["result"]
+                function_response = result["message"]
+            else:
+                function_response = function_to_call(*extract_args(arguments))
+
+            conversation.add_message(role="function", 
+                                    content=function_response,
+                                    function_name=function_name,
+                                    )
+            
+            # * Generate another response based on the called function
+            second_response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=conversation.get_messages(),
+
+                temperature=1.25,
+                max_tokens=75,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0
+            )
+            
+            message = second_response["choices"][0]["message"]
+
+        conversation.add_message(content=message["content"], role="assistant")
+
+        # * Generate audio from ChatGPT's response
+        print(message["content"])
+
+        try:
+            audio = eleven.generate(
+                            text=message["content"],
+                            voice=caroline,
+                            model="eleven_multilingual_v1"
+                        )
+            
+            eleven.save(audio, "audio/message.wav")
+        except:
+            print("Eleven labs error")
+            generate_audio(message["content"])
+
+        
+
+
+
+
+        # * Get the message to the frontend.
+        status["gptMessage"] = message["content"]
+        status["statusMessage"] = "Success"
+
+        return json.dumps(status)
+
+
+
+
+# *##########################################
+def end():
     
     print("Finding microphone...")
 
@@ -202,17 +382,17 @@ def start():
 
     # caroline = list(filter(lambda voice: voice.voice_id == VOICE_ID, voices))[0]
 
-    # * ChatGPT Prompt configuration
-    prompt = """Your name is Stella. You are my friendly assistant. You often like to be sarcastic, and make occasional jokes.
-                You are connected to an application on my computer. I'm using my voice to communicate with you, and turning my speech into text via a speech recognition software.
-                I may ask for a task related to taking an action on my computer, such as opening an application, or sending an email.
-                Do not deny the request or say that you can't do it unless it's absolutely impossible.
-                You also have the ability to play something on Spotify on the user's computer if you are asked.
-                When you receive the awake command from the user: "hey stella", return a short and breif message letting them know 
-                that you're listening
-                """
+    # # * ChatGPT Prompt configuration
+    # prompt = """Your name is Stella. You are my friendly assistant. You often like to be sarcastic, and make occasional jokes.
+    #             You are connected to an application on my computer. I'm using my voice to communicate with you, and turning my speech into text via a speech recognition software.
+    #             I may ask for a task related to taking an action on my computer, such as opening an application, or sending an email.
+    #             Do not deny the request or say that you can't do it unless it's absolutely impossible.
+    #             You also have the ability to play something on Spotify on the user's computer if you are asked.
+    #             When you receive the awake command from the user: "hey stella", return a short and breif message letting them know 
+    #             that you're listening
+    #             """
 
-    conversation = Conversation(prompt)
+    # conversation = Conversation(prompt)
 
 
     
@@ -224,8 +404,6 @@ def start():
         # *    listen for inputs to send to ChatGPT
 
         awake = False
-
-
 
         user_input: dict = listen()
 
@@ -348,7 +526,7 @@ def start():
 
         else:
             print("Try again")
-
+# *##########################################
 
 def main():
     eel.init('gui')

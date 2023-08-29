@@ -7,24 +7,59 @@
 
     <link rel="stylesheet" href="css/style.css">
 
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet"> -->
+
+    <script src="https://kit.fontawesome.com/a4e8b7b3a4.js" crossorigin="anonymous"></script>
+
+
 </head>
 <body>
 
 
-    <div class="container">
+    <div class="wrapper">
 
-        <button class="btn" id="start-btn">Start</button>
+        <div class="container">
+            
+            <button class="btn" id="startBtn">Start Recognition</button>
+    
+            <button id="playBtn">Play audio</button>
+    
+            <!-- <button id="testFlaskBtn">Test Flask</button> -->
+            <button id="changeColorBtn">Change Color</button>
+            <div id="output"></div>
+    
+    
+            <div class="title">
+                <h1>StellaGPT</h1>
+                <i class="btn-info fa-solid fa-circle-question"></i>
+            </div>
 
-        <button class="btn" id="call-py">Call python</button>
+            <div class="title">
+                <label class="toggle">
+                    <input type="checkbox" id="toggleButton">
+                    <span class="slider"></span>
+                </label>
+                <i id="micIcon" class="mic-icon fa-solid fa-microphone-lines-slash"></i>
+            </div>
 
-        <button class="btn" onclick="onlyPlayAudio()">Play audio</button>
+        
+            <canvas id="animationCanvas"></canvas>
 
-        <button class="btn" id="print-py">Print a message in python</button>
+            
+            <p class="message-text" id="messageText">
+                <!-- <span class="helper-text" id="helperText"></span> -->
+                Toggle the microphone and start speaking...
+            </p>
+        </div>
+
+
 
     </div>
 
     
     <script type="text/javascript" src="/eel.js"></script>
-    <script src="script.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>

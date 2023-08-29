@@ -1,5 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+:root {
+    font-family: 'Inter', sans-serif;
+    color: white;
+    font-size: 1.25rem;
+}
+
 
 body {
     margin: 0;
     background: #3C3C3C;
+}
+
+.wrapper {
+    width: 100vw;
+    height: 100vh;
+    /* border: 1px solid orange; */
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    /* border: 1px solid green; */
+    text-align: center;
+    width: 80%;
+    max-width: 500px;
+}
+
+
+button {
+    font-family: inherit;
+    display: none;
+}
+
+canvas {
+    /* border: 1px solid yellow; */
+    padding: 1rem 0;
+}
+
+.title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+}
+
+.btn-info {
+    font-size: 1.25rem;
+    opacity: .6;
+}
+
+/* * Toggle button */
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+
+    display: block;
+}
+
+.toggle input[type="checkbox"] {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input[type="checkbox"]:checked + .slider {
+    background-color: #2ecc71;
+}
+
+input[type="checkbox"]:disabled + .slider{
+    background-color: rgb(153, 153, 153);
+    opacity: .7
+}
+
+input[type="checkbox"]:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.mic-active {
+    text-shadow: 1px 1px 8px rgb(207, 207, 207);
+    opacity: 1;
+    transition-duration: 250ms;
+}
+
+#micIcon {
+    font-size: 1.25rem;
+}
+
+.message-text {
+    font-weight: 500;
+    opacity: .7;
 }

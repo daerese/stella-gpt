@@ -7,6 +7,7 @@ class Conversation:
                 "content": prompt
             }
         ]
+        self.is_awake = False
     
     def add_message(self, role, content, function_name=""):
         """

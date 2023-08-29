@@ -26,7 +26,7 @@ each command that shows either success or failure of the user's request.
 load_dotenv('.env')
 
 
-# * Utility function
+# * Utility functions
 def is_open(app_name: str, include_exe: bool = False) -> bool:
     """
     Confirms if an application is open or not.
