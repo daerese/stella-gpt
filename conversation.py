@@ -1,5 +1,12 @@
+
+"""
+This class stores the messages sent between the user and 
+ChatGPT to help rememeber the context of the conversation.
+"""
+from typing import List, Dict
+
 class Conversation:
-    def __init__(self, prompt=""):
+    def __init__(self, prompt: str =""):
         
         self.messages = [
             {
@@ -9,14 +16,18 @@ class Conversation:
         ]
         self.is_awake = False
     
-    def add_message(self, role, content, function_name=""):
+    def add_message(self, role: str, content: str, function_name: str =""):
         """
-        * Add a new message to the conversation
+        Add a new message to the conversation
 
-        * :param role (string): Set the role of the message. Options: "system", "assistant", "users"
-        * :param message (string): Set the content of the message.
+        Parameters:
+        - role : str
+            - The role of the the message. Options are: "user", "assistant", "function", and "system".
+        - content : str
+            - The contents of the message to be added to the conversation.
+        - function_name : str (optional)
+            - The name of the function if there is a function that needs to be called.
         """
-
 
         if (role == "function"):
             message = {
@@ -32,5 +43,8 @@ class Conversation:
 
         self.messages.append(message)
     
-    def get_messages(self):
+    def get_messages(self) -> List[Dict[str, str]]:
+        """
+        Returns a list of the messages in the current conversation.
+        """
         return self.messages

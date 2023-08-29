@@ -1,4 +1,3 @@
-
 # * Utilities
 import AppOpener
 import os
@@ -23,19 +22,21 @@ class Spotify_Player:
     
     def __init__(self):
         """
-        
-        """
-        # * Whats needed?
-        # * - username
-        # * - client id, client secret, and redirect uri
+        In order for this to work you should have the following environment variabes set in 
+        your .env file:
+        - SPOTIFY_CLIENT_ID 
+        - SPOTIFY_API_KEY
+        - SPOTIFY_REDIRECT_URI
 
+        These can be found in your Spotify for Developers project
+        """
         
         self.spotifyObject = spotipy.Spotify(
             # auth=token,
             auth_manager=SpotifyOAuth(
-                client_id=os.getenv('SPOTIPY_CLIENT_ID'),
-                client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
-                redirect_uri=os.getenv("SPOTIPY_REDIRECT_URI"),
+                client_id=os.getenv('SPOTIFY_CLIENT_ID'),
+                client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
+                redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
                 scope=[
                     "streaming", 
                     "user-modify-playback-state", 

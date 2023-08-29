@@ -176,6 +176,7 @@ pyrightconfig.json
 
 # My python project files
 test.py
+spotify_test.py
 
 # The audio file does not need to be uploaded
 message.wav

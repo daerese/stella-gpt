@@ -1,10 +1,22 @@
+"""
+This file contains function that handle the 
+text to speech functionality. generate_audio 
+is the only function you need.
+"""
+
 import speech_recognition as sr
 import pyttsx3
 
-def generate_audio(text):
+def generate_audio(text: str):
 
     """
-    Turns the passed text into speech and saves it to an audio file
+    Turns the passed text into speech and saves it to an audio file. 
+    If there is an error with Eleven Labs, such as you not having enough credits
+    for voice generation, this function will be called instead.
+
+    Parameters:
+    - text : str
+        - The text to generate speech from
     """
 
     engine = pyttsx3.init()
@@ -23,6 +35,11 @@ def generate_audio(text):
 
 
 def listen(awake=False) -> dict:
+    """
+    This is the python version of the speech recognition. This 
+    can be ignored because it's no longer being used.
+    """
+
     recognizer = sr.Recognizer()
 
     with sr.Microphone() as source:

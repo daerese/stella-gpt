@@ -1,10 +1,16 @@
+"""
+These commands are functions that ChatGPT will use 
+if the user requests it.
+
+So far the user can ask ChatGPT to:
+- Open or close an application
+- Interact with their spotify by:
+    - Playing an album, playlist, or song.
+"""
 
 # ************************************************
-# * Packages to be used to assist with the commands.
-
 # * Utilities
 import AppOpener
-import os
 from dotenv import load_dotenv
 import psutil
 
@@ -13,17 +19,10 @@ import traceback
 from spotify_player import Spotify_Player
 
 
-"""
-ChatGPT recieves a response from our functions. The response 
-should be a string. So let's try returning a message from 
-each command that shows either success or failure of the user's request.
-"""
-
-
-
-# ************************************************
 
 load_dotenv('.env')
+
+# ************************************************
 
 
 # * Utility functions
@@ -50,6 +49,13 @@ def is_open(app_name: str, include_exe: bool = False) -> bool:
 
 # * Open an app
 def open_app(name: str) -> str:
+    """
+    Uses the AppOpener python package to open an application
+
+    Parameters:
+    - name : str
+        - The name of the application
+    """
 
 
     # * First check if the app is already opened
@@ -71,12 +77,16 @@ def open_app(name: str) -> str:
     else:
         output = format("{name} was successfully opened")
         return output
-    # else:
-    #     print("The app is already open")
-    #     return "The app is already open"
 
 # * Close an app
 def close_app(name: str) -> str:
+    """
+    Uses the AppOpener python package to close an application
+
+    Parameters:
+    - name : str
+        - The name of the application
+    """
 
     try:
         AppOpener.close(name, match_closest=True, throw_error=True, output=False)
@@ -95,16 +105,15 @@ def use_spotify_player(spotify_object: type[Spotify_Player], play_option: bool =
     Uses an instance of the Spotify_Player class to play music on Spotify.
 
     Parameters:
-    ------------
-    spotify_object : type[Spotify_Player]
-        An instance of the Spotify_Player class
-    play_option : bool, optional
-        Determines whether to play or pause the user's music on spotify.
+    - spotify_object : type[Spotify_Player]
+        - An instance of the Spotify_Player class
+    - play_option : bool, optional
+        - Determines whether to play or pause the user's music on spotify.
         True --> play, False --> pause
-    item : str, optional
-        The item that the user wants to play on Spotify.
-    type : str
-        The type of the item the user wants to play.
+    - item : str, optional
+        - The item that the user wants to play on Spotify.
+    - type : str
+        - The type of the item the user wants to play.
         Options --> "Track", "Album", "Playlist"
     """
 
