@@ -29,7 +29,13 @@ load_dotenv('.env')
 def is_open(app_name: str, include_exe: bool = False) -> bool:
     """
     Confirms if an application is open or not.
-    Returns True or False
+    
+    Parameters:
+    - include_exe : bool (optional)
+        - Determines if .exe should be included in the application 
+          name to search for.
+    Returns:
+
     """
 
     if include_exe:
@@ -99,7 +105,7 @@ def close_app(name: str) -> str:
 
 # * Commands that will use the Spotify_Player class
 
-def use_spotify_player(spotify_object: type[Spotify_Player], play_option: bool = True, item: str ="", type: str=""):
+def use_spotify_player(spotify_object: type[Spotify_Player], play_option: bool = True, item: str = "", type: str="track"):
 
     """
     Uses an instance of the Spotify_Player class to play music on Spotify.
@@ -138,8 +144,6 @@ def use_spotify_player(spotify_object: type[Spotify_Player], play_option: bool =
         spotify_object.pause()
     
     return "success"
-
-
 
 
 

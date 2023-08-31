@@ -10,8 +10,6 @@ recognition.lang = 'en-US'; // Set the language
 
 const BASE_URL = "http://localhost:5000"
 
-const flaskBtn = document.getElementById('testFlask');
-
 const toggleButton = document.getElementById('toggleButton');
 const micIcon = document.getElementById('micIcon');
 const messageText = document.getElementById('messageText');
@@ -67,8 +65,6 @@ function startListener(text="", holdText=false) {
         messageText.innerHTML = text
     }
 
-
-
 }
 
 function stopListener(text="", holdText=false, temporary=false) {
@@ -99,22 +95,23 @@ function stopListener(text="", holdText=false, temporary=false) {
     
         messageText.innerHTML = text
     }
+
+    if (!toggleButton.disabled && toggleButton.checked) {
+        toggleButton.checked = false
+    } 
 }
 
 function setText(text) {
     messageText.innerHTML = text
 }
 
-// ***************
-
-
+// ******************************
 // * Speech recognition functions
 recognition.onstart = () => {
     console.log("recording...")
 };
 
 recognition.onresult = async (event) => {
-    console.log("called")
     let interimTranscript = '';
     let finalTranscript = '';
 
@@ -128,41 +125,22 @@ recognition.onresult = async (event) => {
         }
     }
 
-    // outputDiv.innerHTML = `
-    //     <p><strong>Interim Transcript:</strong> ${interimTranscript}</p>
-    //     <p><strong>Final Transcript:</strong> ${finalTranscript}</p>
-    // `;
-    
     messageText.innerHTML = `<strong>You:</strong> ${interimTranscript}`
    
    if (finalTranscript.trim() !== "") {
        await handleInput(finalTranscript.trim())
        
-    //    console.log(finalTranscript);
     }
 
 };
 
 recognition.onend = () => {
-    // startBtn.textContent = 'Start Recording';
-    console.log("Not recording")
-
 
     if (toggleButton.checked) {
-        stopListener("", true);
+        stopListener();
     }
 
-    // document.getElementById('toggleButton').checked = false
 };
-
-// startBtn.addEventListener('click', () => {
-//     if (recognition && !recognition.recognizing) {
-//         recognition.start();
-//     } else {
-//         recognition.stop();
-//     }
-// });
-
 
 toggleButton.addEventListener('change', function () {
     if (this.checked) {
@@ -217,86 +195,19 @@ async function handleInput(text) {
 
     let htmlMessage = `<strong>Stella:</strong> ${gptMessage}`
 
-    console.log(gptResponse)
-
-
     setText(htmlMessage)
-    // recognition.start()
-    // startListener(htmlMessage)
-
 }
-
-// * Function to request the audio from Flask and play it.
-// async function startAudio() {
-//     /**
-//      * Retrieves the most recent generated audio from 
-//      * the flask server and plays the audio.
-//      */
-
-//     const response = await fetch('http://localhost:5000/audio')
-
-//     const audioData = await response.blob()
-
-//     const audio = new Audio(URL.createObjectURL(audioData));
-
-
-//     audio.addEventListener("ended", () => {
-//         recognition.start()
-//     })
-
-//     console.log(audio)
-    
-//     audio.play()
-
-// }
-
-
-// const playBtn = document.getElementById('playBtn')
-
-// playBtn.addEventListener('click', async () => {
-        // const response = await fetch('http://localhost:5000/audio')
-
-        // const audioData = await response.blob()
-
-        // const audio = new Audio(URL.createObjectURL(audioData));
-
-        // console.log(audio)
-        
-        // audio.play()
-
-// })
-
-// * Test the flask server
-// const testFlaskBtn = document.getElementById('testFlaskBtn')
-
-// testFlaskBtn.addEventListener('click', async () => {
-//     const response = await fetch('http://localhost:5000/members')
-
-
-//     const data = await response.json()
-
-//     console.log(data)
-// })
 
 // *****************************************
 // * Canvas configuration
 const canvas = document.getElementById('animationCanvas');
 const ctx = canvas.getContext('2d');
 
-// canvas.width = window.innerWidth;
-// canvas.height = window.innerHeight;
-
 // * Setting the intial size and color of the circle animation
 const initialRadius = 50;
-// const listeningColor = "hsl(340, 100%, 70%)";
-// const initialColor = "hsl(195, 47%, 76%)";
-
-// const listeningColor = "rgb(255, 190, 242)";
-// const initialColor = "rgb(134, 225, 255)";
 
 const listeningColor = "rgb(134, 225, 255)";
 const initialColor = "rgb(134, 225, 255)";
-
 
 let listening = false;
 let audioPlaying = false;
@@ -304,6 +215,10 @@ let audioPlaying = false;
 initializeCircle(initialColor, initialRadius);
 
 function initializeCircle(initialColor, initialRadius) {
+    /**
+     * * This creates the circle that is the focus of the animation.
+     * * It then starts the idle animation (pulsate)
+     */
     // Draw the initial glowing ball
     ctx.beginPath();
     const centerX = canvas.width / 2;
@@ -317,9 +232,6 @@ function initializeCircle(initialColor, initialRadius) {
 
     pulsateAnimation()
 }
-
-
-// let pulsateAnimationFrameId = 0;
 
 // * Pulsating animation
 function pulsateAnimation() {
@@ -355,13 +267,8 @@ function pulsateAnimation() {
 
         requestAnimationFrame(() => pulsateAnimation());
     }
-    else {
-
-        // console.log("Most recent radius ->", prevRadius)
-        console.log("No longer pulsating...")
-    }
 }
-
+// *****************************************
 
 // * Intializing the audio analyzation variables
 let audioContext = null;
@@ -377,7 +284,7 @@ async function startAudio()  {
     }
 
 
-    // * Retrieve the audio from this route.
+    // * Retrieve the audio from this local route.
     const response = await fetch('http://localhost:5000/audio')
 
     const audioBlob = await response.blob()
@@ -390,9 +297,6 @@ async function startAudio()  {
     analyser.fftSize = 256;
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
-
-
-    // console.log("Audio element: ", newAudio)
 
     const source = audioContext.createMediaElementSource(newAudio);
     source.connect(analyser);
@@ -413,11 +317,6 @@ async function startAudio()  {
         startListener("", true)
         recognition.start()
     });
-
-    // Stop the pulsateAnimation by canceling the animation frame request
-    // cancelAnimationFrame(pulsateAnimationFrameId);
-
-    // requestAnimationFrame(() => pulsateAnimation(true));
     
     animate(analyser, dataArray);
 
@@ -425,52 +324,28 @@ async function startAudio()  {
 };
 
 // ************************
-// * Animation
-
+// * Main vocal animation
 function animate(analyser, dataArray, prevRadius = null) {
 
     if (audioPlaying) {
         analyser.getByteFrequencyData(dataArray);
     
-        // Calculate the average frequency
+        // * Calculate the average frequency
         const averageFrequency = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
     
-        // Calculate the ball radius based on the average frequency (with a larger range)
+        // * Calculate the ball radius based on the average frequency (with a larger range)
         const minRadius = 50;
         const maxRadius = 125;
         const radius = minRadius + (maxRadius - minRadius) * (averageFrequency / 255);
-    
-        // Calculate the color based on the average frequency (light pink and light purple)
-        // const pinkHue = 340; // Light pink hue
-        // const purpleHue = 140; // Light purple hue
-        // const hue = pinkHue + (purpleHue - pinkHue) * (averageFrequency / 255);
-        // const color = `hsl(${hue}, 100%, 70%)`;
 
-        // // Inside the animate function
-        // const minRed = 255; // Lowest red value
-        // const maxRed = 255; // Highest red value
-        // const minGreen = 182; // Lowest green value
-        // const maxGreen = 0; // Highest green value
-        // const minBlue = 193; // Lowest blue value
-        // const maxBlue = 0; // Highest blue value
-
-        // // Calculate the RGB values based on audio frequency
-        // const red = Math.round(minRed + (maxRed - minRed) * (averageFrequency / 255));
-        // const green = Math.round(minGreen + (maxGreen - minGreen) * (averageFrequency / 255));
-        // const blue = Math.round(minBlue + (maxBlue - minBlue) * (averageFrequency / 255));
-
-
-        // Create the RGB color string
-        // const color = `rgb(${red}, ${green}, ${blue})`;
-
-        // Inside the animate function
-        const pinkRGB = [134, 225, 255]; // RGB values for pink hue
+        // * Inside the animate function
+        const blueRGB = [134, 225, 255]; // RGB values for pink hue
         const purpleRGB = [255, 190, 242]; // RGB values for purple hue
 
-        // Calculate the RGB values based on audio frequency using pink and purple hues
-        const red = Math.round(pinkRGB[0] + (purpleRGB[0] - pinkRGB[0]) * (averageFrequency / 255));
-        const green = Math.round(pinkRGB[1] + (purpleRGB[1] - pinkRGB[1]) * (averageFrequency / 255));
-        const blue = Math.round(pinkRGB[2] + (purpleRGB[2] - pinkRGB[2]) * (averageFrequency / 255));
+        // * Calculate the RGB values based on audio frequency using pink and purple hues
+        const red = Math.round(blueRGB[0] + (purpleRGB[0] - blueRGB[0]) * (averageFrequency / 255));
+        const green = Math.round(blueRGB[1] + (purpleRGB[1] - blueRGB[1]) * (averageFrequency / 255));
+        const blue = Math.round(blueRGB[2] + (purpleRGB[2] - blueRGB[2]) * (averageFrequency / 255));
 
         // Create the RGB color string
         const color = `rgb(${red}, ${green}, ${blue})`;
@@ -492,9 +367,6 @@ function animate(analyser, dataArray, prevRadius = null) {
         // Call the animate function recursively
         const prevRadius = radius
         requestAnimationFrame(() => animate(analyser, dataArray, prevRadius));
-
-        // console.log(prevRadius)
-
     }
 
     else {

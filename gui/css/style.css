@@ -9,8 +9,11 @@
 
 body {
     margin: 0;
-    background: #3C3C3C;
+    /* background: #3C3C3C; */
+    background: #242424;
 }
+
+
 
 .wrapper {
     width: 100vw;
@@ -20,6 +23,22 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+
+    animation: fadeInAnimation ease 3s;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
+
+/* * Fade in animation on page load */
+@keyframes fadeInAnimation {
+
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+
 }
 
 .container {
@@ -37,7 +56,7 @@ button {
 
 canvas {
     /* border: 1px solid yellow; */
-    padding: 1rem 0;
+    padding: 1.5rem 0;
 }
 
 .title {

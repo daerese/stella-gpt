@@ -4,7 +4,7 @@ they need to be described in a the format Dict[str, str]. If you have
 a custom function, write the details of your function in 
 a new dictionary object in the commands array.
 
-For more details, you can read the official documentation here:
+For more details, you can read the ChatGPT official documentation here:
 https://platform.openai.com/docs/guides/gpt/function-calling
 """
 

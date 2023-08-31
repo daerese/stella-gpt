@@ -137,12 +137,14 @@ class Spotify_Player:
     def is_spotify_installed(self) -> bool:
         """
         Checks if spotify is installed on the user's computer.
+        This will help determine whether to use spotify on the 
+        web browser if the user doesn't have spotify installed.
         """
         installed_apps = AppOpener.give_appnames(upper=False)
         
         for app in installed_apps:
             if "spotify" in app:
-                return True
+                return True 
         
         return False
 
@@ -150,21 +152,28 @@ class Spotify_Player:
     def open_spotify(self):
         """
         Opens Spotify if it isn't already opened. If Spotify is not installed,
-        then it is opened on the web browser.
+        then it is opened on the user's default web browser.
         """
-
-        # * Check if spotify is installed and can be opened.
-        # is_installed = self.is_spotify_installed()
 
         # * If spotify is installed and not open, open on the computer.
         if self.is_installed:
             commands.open_app("spotify")
 
         # * Otherwise, If not installed, open it on the web browser
+        else:
+           webbrowser.open("spotify.com")
+
+
+
 
     def find_device_id(self, is_web_browser: bool = False) -> str:
         """
         Finds the id of the device to be used to interact with Spotify.
+
+        Parameters:
+        - is_web_browser : bool (optional)
+            - Determines whether the selected device should be a web browser or not.
+              Set to `True` if the web browser should be used.
         """
 
         devices = self.spotifyObject.devices()["devices"]
@@ -191,6 +200,10 @@ class Spotify_Player:
                     return device_id
 
     def wait_for_device(self):
+        """
+        If there are no current devices, this will attempt to 
+        open spotify on the user's computer make it available for use.
+        """
 
         # * If spotify is not opened, open it and wait for device
         # * Otherwise, just set the device id
@@ -203,20 +216,26 @@ class Spotify_Player:
 
             temp_device_id = ""
             for i in range(2):
+                # * loop twice to wait for the device to show.
                 time.sleep(5)
 
                 temp_device_id = self.find_device_id()
 
                 if temp_device_id:
-                    self.set_device_id(temp_device_id)  
-                    break
+                    self.set_device_id(temp_device_id)
+                    return  
         else:
+            # * If spotify is opened, the device should be available.
             temp_device_id = self.find_device_id()
             self.set_device_id(temp_device_id)
 
     def get_playlist(self, playlist: str) -> json:
         """
         Return the playlist searched for by the user.
+
+        Parameters:
+        - playlist : str
+            - The playlist to search for
         """
 
         # * In order the playlist a user searches for, we have to make 
@@ -250,7 +269,10 @@ class Spotify_Player:
     def set_device_id(self, device_id: str):
         self.device_id = device_id
 
-    # * This header is needed to make requests to the Spotify API.
-    # * We only need this for playing playists
+
     def get_auth_header(self, token: str):
+        """
+        This header is needed to make requests to the directly 
+        to the Spotify API. We only need this for playing playists
+        """
         return {"Authorization": "Bearer "+ token}
