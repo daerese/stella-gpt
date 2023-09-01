@@ -65,7 +65,6 @@ class Spotify_Player:
         play a track/song requested by the user on Spotify.
         """
 
-
         # * 1. Open spotify, if not already open.
         # * 2. Get the device ID (Either for the computer or the web browser)
         # * 3. Search for the requested item.

@@ -66,9 +66,10 @@ commands = [
     },
     {
         "name": "sleep",
-        "description": "If the user doesn't need any more assistance at the moment\
-                        This function should be called. You will take no more input from the user until they request\
-                        your assistance again",
+        "description": "If the user doesn't need any more assistance at the moment,\
+                        or if you presume they are finished speaking to you for now, \
+                        then this function should be called. You will take no more input until the user \
+                        says the wake command 'hey stella' and requests more assistance.",
         "parameters": {
             "type": "object",
             "properties": {}

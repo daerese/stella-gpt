@@ -1,6 +1,6 @@
 """
 These commands are functions that ChatGPT will use 
-if the user requests it.
+if the user requests it. 
 
 So far the user can ask ChatGPT to:
 - Open or close an application
@@ -146,7 +146,9 @@ def use_spotify_player(spotify_object: type[Spotify_Player], play_option: bool =
     return "success"
 
 
-
-def sleep() -> dict:
-    return {"result": False, 
-            "message": ""}
+def sleep() -> None:
+    """
+    This function will be passed to ChatGPT. This function will help
+    determine if user input should continue to be processed or not.
+    """
+    return ""

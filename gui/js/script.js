@@ -1,8 +1,7 @@
 
-const startBtn = document.getElementById('startBtn');
 const outputDiv = document.getElementById('output');
-const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 recognition.continuous = true;
 recognition.interimResults = true;
 recognition.lang = 'en-US'; // Set the language
@@ -13,13 +12,27 @@ const BASE_URL = "http://localhost:5000"
 const toggleButton = document.getElementById('toggleButton');
 const micIcon = document.getElementById('micIcon');
 const messageText = document.getElementById('messageText');
-// const helperText = document.getElementById('helperText');
+
+// * The speech recognition class will turn off after a few seconds of silence.
+// * This variable will be used to determine when that happens.
+// * The recognition needs to be constantly listening unless switched off. 
+let endedFromSilence = false;
+
+// * Awake helps determine the color of the audio main animation.
+// * The color will signal to the user if Stella is awake and listening or not.
+let awake = false;
 
 // ***************
 // * Utility functions
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function setText(text) {
+    messageText.innerHTML = text
 }
+
+function setEndedFromSilence(value) {
+
+    endedFromSilence = value
+}
+
 
 //* Check if the user's microphone is available
 async function checkMicrophone() {
@@ -49,7 +62,6 @@ function startListener(text="", holdText=false) {
     micIcon.classList.add("mic-active")
 
     micIcon.classList.add('fa-microphone-lines');
-
     
     // * If the button was disabled, re-enable it
     if (toggleButton.disabled) {
@@ -60,7 +72,7 @@ function startListener(text="", holdText=false) {
     if (!holdText) {
         
         if (!text) {
-            text = "Listening"
+            text = awake ? "Listening..." : `Say "Hey, Stella" to start`
         }
         messageText.innerHTML = text
     }
@@ -86,24 +98,23 @@ function stopListener(text="", holdText=false, temporary=false) {
 
     if (temporary) {
         toggleButton.disabled = true
-    }
+    } 
 
     if (!holdText) {
         if (!text) {
-            text = "Toggle the microphone and start speaking..."
+
+            text = `Toggle the microphone and say "Hey, Stella" to start`
         }
     
         messageText.innerHTML = text
     }
 
+    // * If the button isn't disabled 
     if (!toggleButton.disabled && toggleButton.checked) {
         toggleButton.checked = false
     } 
 }
 
-function setText(text) {
-    messageText.innerHTML = text
-}
 
 // ******************************
 // * Speech recognition functions
@@ -128,7 +139,10 @@ recognition.onresult = async (event) => {
     messageText.innerHTML = `<strong>You:</strong> ${interimTranscript}`
    
    if (finalTranscript.trim() !== "") {
-       await handleInput(finalTranscript.trim())
+
+
+        console.log("FINAL TRANSCRIPT: ", finalTranscript)
+        await handleInput(finalTranscript.trim())
        
     }
 
@@ -136,8 +150,22 @@ recognition.onresult = async (event) => {
 
 recognition.onend = () => {
 
+    // * This event is also where we determine if the 
+
     if (toggleButton.checked) {
-        stopListener();
+
+        if (toggleButton.disabled) {
+            setEndedFromSilence(true);
+            stopListener();
+        }
+
+        // * If the toggle button isn't disabled, and the button is checked
+        // * Then the recognition turned off on its own. Turn the recognition back on.
+        // * This ensures the recognition is constantly listening.
+        else {
+            console.log("Restarting listener...")
+            recognition.start()
+        }
     }
 
 };
@@ -169,7 +197,7 @@ toggleButton.addEventListener('change', function () {
 
 
 // * Main function that handles the user input
-async function handleInput(text) {
+async function handleInput(text = "") {
     /**
      * Handles the user input by sending it to python
      * to generate a ChatGPT response.
@@ -177,25 +205,57 @@ async function handleInput(text) {
      * @param {str} text - The user input
      */
 
+    console.log("WHATS BEING SENT: ", text)
+
+    if (!awake) {
+        if (text.toLowerCase().includes("hey stella")) {
+            awake = true
+        }
+        else {
+            startListener("", false)
+        }
+
+    }
+
+    if (awake) {
+
+        // * If awake, send the input to chatGPT and wait for a response
+        recognition.stop()
+    
+        stopListener("Waiting for response...", false, true);
+    
+        let gptResponse = await eel.generate_gpt_response(text)()
+        gptResponse = JSON.parse(gptResponse)
+
+        let gptStatus = gptResponse["status"]
+        console.log(gptResponse)
+
+        if (gptStatus === 200) {
+            let gptMessage = gptResponse["gptMessage"]
+    
+            let gptSleep = gptResponse["go_to_sleep"]
+            
+            // * Code for if the user needs no more assistance.
+            awake = gptSleep ? false : true
+        
+            // * Get the audio and start playing it.
+            // * Then set the corresponding text.
+            startAudio()
+        
+            let htmlMessage = `<strong>Stella:</strong> ${gptMessage}`
+        
+            setText(htmlMessage)
+        }
+        else {
+            setText(gptResponse["statusMessage"])
+
+            startListener("", true)
+            recognition.start()
+        }
 
 
-    recognition.stop()
-    stopListener("Waiting for response...", false, true);
+    }
 
-    let gptResponse = await eel.generate_gpt_response(text)()
-
-    gptResponse = JSON.parse(gptResponse)
-
-    let gptMessage = gptResponse["gptMessage"]
-
-
-    // * Get the audio and start playing it.
-    // * Then set the corresponding text.
-    startAudio()
-
-    let htmlMessage = `<strong>Stella:</strong> ${gptMessage}`
-
-    setText(htmlMessage)
 }
 
 // *****************************************
@@ -206,8 +266,8 @@ const ctx = canvas.getContext('2d');
 // * Setting the intial size and color of the circle animation
 const initialRadius = 50;
 
+const initialColor = "rgb(194, 189, 255)";
 const listeningColor = "rgb(134, 225, 255)";
-const initialColor = "rgb(134, 225, 255)";
 
 let listening = false;
 let audioPlaying = false;
@@ -258,7 +318,7 @@ function pulsateAnimation() {
         const centerY = canvas.height / 2;
         const gradient = ctx.createRadialGradient(centerX, centerY, pulsatingRadius / 2, centerX, centerY, pulsatingRadius);
         gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-        gradient.addColorStop(1, initialColor); // Use the same initial color
+        gradient.addColorStop(1, awake ? listeningColor : initialColor); // Use the same initial color
         ctx.fillStyle = gradient;
         ctx.arc(centerX, centerY, pulsatingRadius, 0, Math.PI * 2);
         ctx.fill();

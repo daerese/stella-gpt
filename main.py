@@ -17,10 +17,10 @@ from tts import generate_audio
 
 
 # *******************************
-
-# * Environment variables
 load_dotenv('.env')
 
+# * Environment variables
+# * Set the following variables in your .env file.
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
 
 ELEVEN_API_KEY: str = os.getenv("ELEVEN_API_KEY")
@@ -63,15 +63,23 @@ for command in commands:
     command_name = command["name"]
     available_commands[command_name] = eval(command_name)
 
+# Your name is Stella. You are both my assistant, and my friend. You always speak in the form of rhymes and poems.
+
+"""
+Similar to SIRI on the Iphone, you have a wake command to listen for from the user, which is: "hey stella".
+            When you recieve this command, return a short and breif message letting them know that you're listening.
+"""
 
 # * ChatGPT Prompt configuration
-prompt = """Your name is Stella. You are my friendly assistant. You often like to be sarcastic, and make occasional jokes.
+prompt = """Your name is Stella. You are both my assistant, and my friend. You often like to be sarcastic, and make occasional jokes.
             You are connected to an application on my computer. I'm using my voice to communicate with you, and turning my speech into text via a speech recognition software.
             I may ask for a task related to taking an action on my computer, such as opening an application, or sending an email.
             Do not deny the request or say that you can't do it unless it's absolutely impossible.
             You also have the ability to play something on Spotify on the user's computer if you are asked.
-            When you receive the awake command from the user: "hey stella", return a short and breif message letting them know 
-            that you're listening
+            Using the ChatGPT API, I will pass functions to you that allow you to execute these commands.
+            Finally, I will also pass a function to you called sleep().
+            If the user doesn't need any more assistance at the moment, or if you presume they are finished speaking to you for now,
+            then make sure to call the sleep function.
             """
 
 conversation = Conversation(prompt)
@@ -96,6 +104,8 @@ def generate_gpt_response(text: str) -> Dict[str, Any]:
     success or failure of generating a response.
     """
 
+    # * If not awake, check if the user said the awake command "Hey stella"
+    
     conversation.add_message(role="user", content=text)
 
     # * A personal status code to indicate to my Javascript 
@@ -103,7 +113,8 @@ def generate_gpt_response(text: str) -> Dict[str, Any]:
     status = {
         "status": 200,
         "statusMessage": "",
-        "gptMessage": ""
+        "gptMessage": "",
+        "go_to_sleep": False
     }
 
     try:
@@ -123,7 +134,8 @@ def generate_gpt_response(text: str) -> Dict[str, Any]:
         )
     except:
         status["status"] = 500
-        status["message"] = "ChatGPT response error"
+        status["statusMessage"] = "There was a ChatGPT response error. Check your ChatGPT API usage at: \nhttps://platform.openai.com/account/usage"
+        return json.dumps(status)
     else:
         # * Append ChatGPT response to have context in the current conversation.
         message = response["choices"][0]["message"]
@@ -150,9 +162,8 @@ def generate_gpt_response(text: str) -> Dict[str, Any]:
                 function_response = function_to_call(spotify_object, *extract_args(arguments))
             
             elif function_name == "sleep":
-                result = function_to_call()
-                awake = result["result"]
-                function_response = result["message"]
+                status["go_to_sleep"] = True
+                function_response = function_to_call()
             else:
                 function_response = function_to_call(*extract_args(arguments))
 
