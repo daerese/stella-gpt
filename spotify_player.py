@@ -49,6 +49,9 @@ class Spotify_Player:
         self.user = self.spotifyObject.current_user()
         self.device_id: str = ""
         self.is_installed = self.is_spotify_installed()    
+
+        self.has_client_id = self.check_for_client_id()
+    
     
     def resume_playback():
         """
@@ -132,6 +135,17 @@ class Spotify_Player:
     # *********************
     # * Utility methods
     # *********************
+
+    def check_for_client_id(self) -> bool:
+        """
+        Confirms if the SPOTIFY_CLIENT_ID is set as an 
+        environment variable. The program can't interact with Spotify
+        without setting this environment variable.
+        """
+        if os.getenv("SPOTIFY_CLIENT_ID") != None:
+            return True
+        else:
+            return False
 
     def is_spotify_installed(self) -> bool:
         """

@@ -15,22 +15,18 @@ from spotify_player import Spotify_Player
 from conversation import Conversation
 from tts import generate_audio
 
-
 # *******************************
+# * Environment variables
 load_dotenv('.env')
 
-# * Environment variables
 # * Set the following variables in your .env file.
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
 
-ELEVEN_API_KEY: str = os.getenv("ELEVEN_API_KEY")
+ELEVENLABS_API_KEY: str = os.getenv("ELEVENLABS_API_KEY")
 
-VOICE_ID: str = os.getenv("VOICE_ID")
-
-# * API Keys
+# * Setting the API Keys
 openai.api_key = OPENAI_API_KEY
-eleven.set_api_key(ELEVEN_API_KEY)
-
+eleven.set_api_key(ELEVENLABS_API_KEY if ELEVENLABS_API_KEY else "")
 
 # *******************************
 # * Utility functions
@@ -46,14 +42,35 @@ def extract_args(args: dict) -> list:
     return args_to_call
 
 # *******************************
-
+# * ElevenLabs Voice Setup
 
 def get_voices():
-    return eleven.voices()    
+    """
+    Use this to view the list of voices that can be used
+    for text-to-speech.
+    """
+    return eleven.voices()  
 
-# available_functions = {
-#                         "get_character_info": get_character_info
-#                     }
+
+# * The following Voice ID is for my preferred voice --> Caroline
+# * You can view all the voices available to you with this link, 
+# * then set the ID of the voice you want:
+# https://api.elevenlabs.io/docs#/voices/Get_voices_v1_voices_get
+VOICE_ID : str = "KEl9xgZVYhCkkqQMYe6"
+
+try:
+    voices = get_voices()
+
+    main_voice = list(filter(lambda voice: voice.voice_id == VOICE_ID, voices))
+
+    # * If my voice isn't available to you, then a default voice is selected.
+    if len(main_voice) > 0:
+        main_voice = main_voice[0]
+    else:
+        main_voice = list(filter(lambda voice: voice.name.lower() == "matilda", voices))[0]
+except:
+    main_voice = None
+# *******************************
 
 available_commands = {}
 
@@ -63,30 +80,24 @@ for command in commands:
     command_name = command["name"]
     available_commands[command_name] = eval(command_name)
 
-# Your name is Stella. You are both my assistant, and my friend. You always speak in the form of rhymes and poems.
-
-"""
-Similar to SIRI on the Iphone, you have a wake command to listen for from the user, which is: "hey stella".
-            When you recieve this command, return a short and breif message letting them know that you're listening.
-"""
 
 # * ChatGPT Prompt configuration
-prompt = """Your name is Stella. You are both my assistant, and my friend. You often like to be sarcastic, and make occasional jokes.
-            You are connected to an application on my computer. I'm using my voice to communicate with you, and turning my speech into text via a speech recognition software.
-            I may ask for a task related to taking an action on my computer, such as opening an application, or sending an email.
-            Do not deny the request or say that you can't do it unless it's absolutely impossible.
-            You also have the ability to play something on Spotify on the user's computer if you are asked.
-            Using the ChatGPT API, I will pass functions to you that allow you to execute these commands.
-            Finally, I will also pass a function to you called sleep().
-            If the user doesn't need any more assistance at the moment, or if you presume they are finished speaking to you for now,
-            then make sure to call the sleep function.
-            """
+prompt = """
+            - Your name is Stella. You are both my assistant, and my friend. You often like to be sarcastic, and occasionally make jokes.
+            - The name of your creator is Daerese, whose online persona is Katamimo.
+            - You are connected to an application on my computer. I'm using my voice to communicate with you, and turning my speech into text via a speech recognition software.
+            - I may ask for a task related to taking an action on my computer, such as opening an application, or sending an email.
+            - Do not deny the request or say that you can't do it unless it's absolutely impossible.
+            - You have the ability to play something on Spotify on the user's computer if you are asked.
+            - Using the ChatGPT API, I will pass functions to you that allow you to execute these commands.
+            - Finally, I will also pass a function to you called sleep().
+              If the user doesn't need any more assistance at the moment, or if you presume they are finished speaking to you for now,
+              then make sure to call the sleep function.
+        """
 
 conversation = Conversation(prompt)
 
-voices = get_voices()
 
-caroline = list(filter(lambda voice: voice.voice_id == VOICE_ID, voices))[0]
 
 @eel.expose
 def generate_gpt_response(text: str) -> Dict[str, Any]:
@@ -159,8 +170,13 @@ def generate_gpt_response(text: str) -> Dict[str, Any]:
                 if "spotify_object" not in locals():
                     spotify_object = Spotify_Player()
 
-                function_response = function_to_call(spotify_object, *extract_args(arguments))
-            
+                # * Check if the user has their Spotify API info set up.
+                if spotify_object.check_for_client_id():
+                    function_response = function_to_call(spotify_object, *extract_args(arguments))
+                else:
+                    function_response = "Spotify_Player is unavailable"
+
+
             elif function_name == "sleep":
                 status["go_to_sleep"] = True
                 function_response = function_to_call()
@@ -187,20 +203,24 @@ def generate_gpt_response(text: str) -> Dict[str, Any]:
             message = second_response["choices"][0]["message"]
 
         conversation.add_message(content=message["content"], role="assistant")
-
-        # * Generate audio from ChatGPT's response
         print(message["content"])
 
-        try:
-            audio = eleven.generate(
-                            text=message["content"],
-                            voice=caroline,
-                            model="eleven_multilingual_v1"
-                        )
-            
-            eleven.save(audio, "audio/message.wav")
-        except:
-            print("Eleven labs error")
+        # * Generate audio from ChatGPT's response
+        if main_voice:
+            try:
+                # * Generating the audio using eleven labs
+                audio = eleven.generate(
+                                text=message["content"],
+                                voice=main_voice,
+                                model="eleven_multilingual_v1"
+                            )
+                
+                eleven.save(audio, "audio/message.wav")
+            except:
+                # * Using built in tts if elevenlabs doesn't work or isn't set up.
+                print("Eleven labs error")
+                generate_audio(message["content"])
+        else:
             generate_audio(message["content"])
 
 
@@ -213,6 +233,7 @@ def generate_gpt_response(text: str) -> Dict[str, Any]:
 # *##########################################
 
 def main():
+    
     eel.init('gui')
 
     eel.start('main.html')

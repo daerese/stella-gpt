@@ -181,4 +181,6 @@ spotify_test.py
 # The audio file does not need to be uploaded
 message.wav
 
+readme.md
+
 # End of https://www.toptal.com/developers/gitignore/api/python
