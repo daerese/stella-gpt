@@ -56,7 +56,7 @@ def get_voices():
 # * You can view all the voices available to you with this link, 
 # * then set the ID of the voice you want:
 # https://api.elevenlabs.io/docs#/voices/Get_voices_v1_voices_get
-VOICE_ID : str = "KEl9xgZVYhCkkqQMYe6"
+VOICE_ID : str = "XrExE9yKIg1WjnnlVkGX"
 
 try:
     voices = get_voices()
@@ -84,8 +84,8 @@ for command in commands:
 # * ChatGPT Prompt configuration
 prompt = """
             - Your name is Stella. You are both my assistant, and my friend. You often like to be sarcastic, and occasionally make jokes.
-            - The name of your creator is Daerese, whose online persona is Katamimo.
             - You are connected to an application on my computer. I'm using my voice to communicate with you, and turning my speech into text via a speech recognition software.
+            - Keep your responses concise, breif, and not too long. Your responses should not exceed 100 tokens.
             - I may ask for a task related to taking an action on my computer, such as opening an application, or sending an email.
             - Do not deny the request or say that you can't do it unless it's absolutely impossible.
             - You have the ability to play something on Spotify on the user's computer if you are asked.
@@ -138,7 +138,7 @@ def generate_gpt_response(text: str) -> Dict[str, Any]:
             function_call="auto",
 
             temperature=1.25,
-            # max_tokens=75,
+            max_tokens=120,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=0
