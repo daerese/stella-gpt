@@ -84,7 +84,9 @@ pip install -r requirements.txt
 OPENAI_API_KEY = "Your API key"
 ELEVENLABS_API_KEY = "Your API key"
 ```
-
+3. If you don't have these API keys you need to create an account with these websites:
+    -  [OpenAI API](https://platform.openai.com/) --> Click on your profile, then navigate to **View API Keys** and create one.
+    - [ElevenLabs API](https://elevenlabs.io/)  --> Navigate to **Profile** to view your API key
 #### 📻 Spotify API usage (optional)
 *To obtain required information for Spotify interactivity, you need to create a project on the **[Spotify for Developers](https://developer.spotify.com/)** website.*
 1. Log in, click on your profile and navigate to the **dashboard**
