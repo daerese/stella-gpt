@@ -60,10 +60,16 @@ virtualenv <virtual-environment-name>
 ```
 
 *Activate the virual environment:*
-  - *Remember to use **forward slashes** in the Git Bash, and **back slashes** in the command prompt*
+- *If you are using the **Git Bash:***
+```
+source <virtual-environment-name>/Scripts/activate
+```
+- *If you are using the **Command Prompt:***
 ```
 <virtual-environment-name>\Scripts\activate
 ```
+
+
 3. **Install the required python packages:**
 ```
 pip install -r requirements.txt
